@@ -1,0 +1,122 @@
+---
+title: "Assigment 4"
+subtitle: "Olivia Wrigley, owri141, ID:358253979"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = FALSE)
+library(tidyverse)
+library(jsonlite)
+library(gganimate)
+
+```
+
+```{css}
+@import url('https://fonts.googleapis.com/css2?family=Cabin&display=swap');
+h1{color: red}
+body {font-family: 'Cabin', sans-serif; background-color: #F3F8AD}
+
+```
+
+## Introduction
+For this assignment, I have used a playlist on Spotify called *Glee - The Complete Playlist*. I decided to use this playlist as I love the show Glee and thought it would have various songs. I have portrayed a story focusing on the variable energy through my graphs. 
+
+
+### Why did you choose this story, and why did you decide to focus on specific variables? 
+Within the data from the playlist, I wanted to create a story of visualisations through the variable energy. To look deeper into the difference between low and high energy. From watching Glee, I found that most of the songs seemed upbeat and high energy, but I wanted to see if this was what I found or if there was some proof behind it. I also wanted to portray how the different high and low energies were spread out over the years they were realised. There are many trends in music, and I wanted in my story to look at if there were differences in the amount of high and low energy songs produced. 
+
+
+```{r}
+song_data <- fromJSON("glee playlist data.json")
+
+split_energy_songs <- song_data %>%
+  mutate(low_high_energy = ifelse(energy < 0.5, 
+                                  "low energy", 
+                                  "high energy"))
+
+mean_of_energys <- split_energy_songs %>%
+  group_by(low_high_energy) %>%
+  summarise(mean_duration = mean(energy))
+  
+
+split_energy_songs %>%
+  ggplot() +
+  geom_density(aes(x = energy, 
+                   fill = low_high_energy, 
+                   alpha = 0.5)) + 
+  scale_fill_manual( values = c("red", "yellow")) +
+  geom_vline(data = mean_of_energys, 
+             aes(xintercept = mean_duration, 
+                 colour = low_high_energy)) +
+  scale_color_manual(values = c("red", "yellow")) +
+  labs(title = "Comparing amount of high and low energy songs", 
+       caption = "Source: Spotify, Glee - The Complete Playlist", 
+       x = "Energy",
+       y = "Count")
+  
+```
+
+
+
+```{r}
+song_data <- fromJSON("glee playlist data.json")
+
+year_data <- song_data %>%
+  mutate(year_released = release_date %>% 
+           str_sub(1, 4) %>% 
+           parse_number(),
+         different_energies = case_when(
+           (energy < 0.5) ~ "low", 
+           (energy < 1) ~ "high",
+           ))
+
+mean_year_data <- year_data %>%
+  group_by(different_energies) %>%
+  summarise(mean_year = mean(year_released, na.rm = TRUE)) %>%
+  arrange(mean_year)
+  
+ggplot() + 
+  geom_jitter(data = year_data, 
+              aes(x = year_released, y = different_energies, height = 0.2, colour = "red")) +
+  geom_point(data =  mean_year_data, 
+             aes(x = mean_year, y = different_energies), colour = "yellow", size = 10,  shape = 20) +
+  transition_states(year_released) +
+  shadow_mark() +
+  labs(title = "Is there a diffrence in high and low energy songs 
+       released each year?",
+       subtitle = "Looking at low and high energy songs 
+       against year released from 2008 to 2021", 
+       caption = "Source: Spotify, Glee - The Complete Playlist", 
+       x = "Energy",
+       y = "Count")
+
+```
+### Why did you choose the chart type(s) you used?
+For *my first graph*, I thought it would be most appropriate to use a density graph as I feel that the graph is visually straightforward to see where the peaks are for each group and can easily compare the low and high energy songs. 
+
+For *my second graph*, I used a jitter plot with animation. I feel that this conveys a story and allows you, when watching, to compare the low and high energy songs realised by each year. 
+
+
+### How do you apply the "grammar of graphics"? 
+I have used throughout my assignment a layered grammar of graphics framework. This has allowed me to manipulate and add many layers to my graphs. 
+
+**graph 1:**      
+I supplied data (split_energy_songs) for the graph by piping it into the ggplot function. For my geometric object, I used geom_density to display my data. For the aesthetics of the graph, I used energy as the x-axis, and I used the high and low data that I had previously grouped to make the two curves. Scale_fill_manual was used to change the colour of the two curves. As the glee colours are mainly red and yellow, I decided to use these to keep the theme across the whole assignment. I added another layer using geom_vline to add a line where each mean was. I also changed the colour to match the same colour as the density plots through scale_color_manual. 
+
+**graph 2:**      
+I supplied data (year_data) for the graph by setting data = year_data in the ggplot function. For my geometric object, I used geom_jitter, and I split the variable energies into low and high and then displayed them against the released year. I have changed the dot points to red to keep the glee theme through aesthetics. I added a layer called geom_point to add in the means of each energy group. I made these yellow and made the shape a circle to be easily viewable.
+
+
+### Things I tried but didn't work:
+I played around, and many different aspects did not work out. I had initially wanted to create a story around tempos. Still, because it wasn't measured between 0 and 1, I could not find a way to space out different tempos while conveying a meaningful story evenly.
+
+
+### Overall Conclusion:
+In conclusion, I have created a story focused on the variable energy. I have shown the difference in the number of songs for high and low energy and has found the mean value for each group's energy. From this graph, I have learned that there were more low energy songs than high energy songs. This surprised me as the prediction that I made at the start did not align with this. 
+
+I have also compared what year each song was released, grouped by high and low energy. I was trying to see if the year affected whether or not high or low energy songs were released. I found that all the data points were fairly spread out between the high and low energy. It looks like in 2014 and 2015, there were slightly more songs with high energy released, but this is not a significant difference. 
+
+Throughout this process, I have made sure that the story I am telling is clear through my graphs and kept my theme and purpose clear. I have enjoyed looking a lot deeper into ggplot. I have found this assignment, I have had to do a lot of pre-thinking and planning. I have loved playing around with the shapes, colours and different animations. This assignment pushed me to be creative and to explore and expand on the knowledge I have gained in lectures and labs, which I have enjoyed. 
+
+
